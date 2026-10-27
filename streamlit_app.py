@@ -225,6 +225,22 @@ elif section == "סיכום למנהל":
 elif section == "תמונת מוסד":
     st.subheader("תמונת מוסד — הדגמה")
     selected = st.selectbox("בחר מוסד", ["בית ספר הדגמה א׳", "בית ספר הדגמה ב׳", "גן הדגמה ג׳"])
+    school_profiles = {
+        "בית ספר הדגמה א׳": {"address": "רחוב הדגמה 1", "neighborhood": "שכונת הדגמה צפון", "principal": "מנהל/ת לדוגמה א׳", "coordinator": "רכז/ת ביטחון לדוגמה א׳", "phone": "לא הוזן", "security": "מאובטח", "standard": "מאבטח"},
+        "בית ספר הדגמה ב׳": {"address": "רחוב הדגמה 2", "neighborhood": "שכונת הדגמה מזרח", "principal": "מנהל/ת לדוגמה ב׳", "coordinator": "רכז/ת ביטחון לדוגמה ב׳", "phone": "לא הוזן", "security": "לא מאובטח", "standard": "ללא תקן"},
+        "גן הדגמה ג׳": {"address": "רחוב הדגמה 3", "neighborhood": "שכונת הדגמה דרום", "principal": "מנהל/ת לדוגמה ג׳", "coordinator": "לא הוזן", "phone": "לא הוזן", "security": "לא מאובטח", "standard": "ללא תקן"},
+    }
+    profile = school_profiles[selected]
+    st.markdown("**פרטי מוסד**")
+    st.write("כתובת: " + profile["address"])
+    st.write("שכונה: " + profile["neighborhood"])
+    st.write("מנהל/ת: " + profile["principal"])
+    st.write("רכז/ת ביטחון: " + profile["coordinator"])
+    st.write("טלפון: " + profile["phone"])
+    st.markdown("**מצב אבטחה — נתוני הדגמה בלבד**")
+    st.write("מצב: " + profile["security"])
+    st.write("תקן: " + profile["standard"])
+    st.divider()
     matched = [t for t in tasks if t["school"] == selected]
     st.write("**משימות**")
     for task in matched:
