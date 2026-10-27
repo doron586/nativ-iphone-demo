@@ -33,6 +33,7 @@ div[data-testid="stButton"] button {
 """, unsafe_allow_html=True)
 
 from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 if "demo_completed" not in st.session_state:
     st.session_state.demo_completed = set()
@@ -137,7 +138,7 @@ def show_task(task):
             st.session_state.demo_completed.add(task["id"])
             st.rerun()
 
-section = st.radio("מעבר מהיר", ["לטיפול עכשיו", "משימות בהמשך", "ליקויים", "רענונים והכשרות", "יומן פעילות"])
+section = st.radio("מעבר מהיר", ["לטיפול עכשיו", "משימות בהמשך", "ליקויים", "רענונים והכשרות", "יומן פעילות", "סיכום למנהל"])
 
 if section == "לטיפול עכשיו":
     due_now = [t for t in open_tasks if t["urgent"] or t["due"] <= today]
@@ -157,7 +158,7 @@ elif section == "משימות בהמשך":
 
 elif section == "יומן פעילות":
     st.subheader("יומן פעילות הקב״ט — הדגמה")
-    st.caption("רישום ידני של פעילויות פיקטיביות. השעה נקלטת בעת שמירת הדיווח לפי שעון שרת ההדגמה.")
+    st.caption("רישום ידני של פעילויות פיקטיביות. השעה נקלטת בעת שמירת הדיווח לפי שעון ישראל.")
     with st.form("activity_form", clear_on_submit=True):
         school = st.selectbox("מוסד חינוכי", ["בית ספר הדגמה א׳", "בית ספר הדגמה ב׳", "גן הדגמה ג׳"])
         kind = st.selectbox("סוג פעילות", ["ביקור במוסד", "בדיקת אבטחה", "פגישה", "טיפול בליקוי", "פעילות אחרת"])
@@ -169,7 +170,7 @@ elif section == "יומן פעילות":
         else:
             st.session_state.demo_activities.append({
                 "school": school, "kind": kind, "note": note.strip(),
-                "recorded_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
+                "recorded_at": datetime.now(ZoneInfo("Asia/Jerusalem")).strftime("%d/%m/%Y %H:%M"),
             })
             st.success("הפעילות נוספה ליומן ההדגמה.")
     st.subheader("פעילויות שתועדו")
@@ -186,6 +187,40 @@ elif section == "יומן פעילות":
         for entry in st.session_state.demo_activities:
             st.write(f'• {entry["school"]}: {entry["kind"]} — {entry["note"]}')
     st.caption("הסיכום מבוסס על הפעילויות שנרשמו בסשן ועל מצב משימות ההדגמה, ואינו דוח רשמי.")
+
+elif section == "סיכום למנהל":
+    st.subheader("סיכום יום למנהל המחלקה — תצוגת הדגמה")
+    st.caption("טיוטה לצפייה בלבד. לא נשלחת למנהל, לא נשמרת במאגר ואינה מהווה דוח רשמי.")
+    st.write("**תאריך:** " + today.strftime("%d/%m/%Y"))
+    st.write("**קב״ט:** קב״ט הדגמה")
+    st.write(f"**משימות שבוצעו:** {completed_count} מתוך {total_count}")
+    st.write(f"**פעילויות שתועדו:** {len(st.session_state.demo_activities)}")
+    st.write(f"**משימות דחופות פתוחות:** {len(urgent_open)}")
+    st.write(f"**משימות באיחור:** {len(overdue_open)}")
+    st.write(f"**ליקויים שטרם טופלו:** {defects_open}")
+    st.write(f"**רענונים והכשרות לטיפול או לאימות:** {training_pending + training_unverified}")
+    st.markdown("**פעילויות שבוצעו**")
+    if st.session_state.demo_activities:
+        for entry in st.session_state.demo_activities:
+            st.write(f'{entry["recorded_at"]} | {entry["school"]} | {entry["kind"]}: {entry["note"]}')
+    else:
+        st.info("לא נרשמו פעילויות ביומן בסשן הנוכחי.")
+    st.markdown("**משימות שהושלמו**")
+    finished = [task for task in tasks if task["id"] in st.session_state.demo_completed]
+    if finished:
+        for task in finished:
+            st.write(f'• {task["school"]} — {task["title"]}')
+    else:
+        st.write("לא סומנו משימות כבוצעו.")
+    st.markdown("**נושאים להמשך טיפול**")
+    for task in sorted(open_tasks, key=task_priority):
+        if task["urgent"] or task["due"] <= today:
+            st.warning(f'{task["school"]} — {task["title"]} (פתוח)')
+    if defects_open:
+        st.warning("בית ספר הדגמה ב׳ — ליקוי תאורה: " + st.session_state.demo_defects["lighting"])
+    if training_pending + training_unverified:
+        st.warning("קיימים רענונים או הכשרות הממתינים לביצוע או לאימות אסמכתה.")
+    st.caption("אין כאן כפתור שליחה. הפקת דוח רשמי תחייב הרשאות, אימות ושמירה מאובטחת.")
 
 elif section == "ליקויים":
     st.subheader("מעקב ליקויים — הדגמה")
