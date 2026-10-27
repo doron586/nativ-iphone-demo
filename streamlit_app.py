@@ -36,6 +36,10 @@ from datetime import date, timedelta
 
 if "demo_completed" not in st.session_state:
     st.session_state.demo_completed = set()
+if "demo_defects" not in st.session_state:
+    st.session_state.demo_defects = {"lighting": "פתוח"}
+if "demo_training" not in st.session_state:
+    st.session_state.demo_training = {"security": "ממתין לביצוע", "trips": "ממתין לביצוע"}
 
 today = date.today()
 tasks = [
@@ -69,7 +73,7 @@ def show_task(task):
             st.session_state.demo_completed.add(task["id"])
             st.rerun()
 
-section = st.radio("מעבר מהיר", ["לטיפול עכשיו", "משימות בהמשך", "רענונים והכשרות"])
+section = st.radio("מעבר מהיר", ["לטיפול עכשיו", "משימות בהמשך", "ליקויים", "רענונים והכשרות"])
 
 if section == "לטיפול עכשיו":
     due_now = [t for t in open_tasks if t["urgent"] or t["due"] <= today]
@@ -77,7 +81,8 @@ if section == "לטיפול עכשיו":
         st.success("אין משימות פתוחות לטיפול מיידי בהדגמה.")
     for task in due_now:
         show_task(task)
-    st.warning("ליקוי פתוח לדוגמה | תאורה — בית ספר הדגמה ב׳")
+    if st.session_state.demo_defects["lighting"] != "טופל":
+        st.warning("ליקוי לדוגמה | תאורה — בית ספר הדגמה ב׳ | " + st.session_state.demo_defects["lighting"])
 
 elif section == "משימות בהמשך":
     future = [t for t in open_tasks if not t["urgent"] and t["due"] > today]
@@ -86,12 +91,27 @@ elif section == "משימות בהמשך":
     for task in future:
         show_task(task)
 
+elif section == "ליקויים":
+    st.subheader("מעקב ליקויים — הדגמה")
+    st.warning("תאורה בחצר — בית ספר הדגמה ב׳")
+    status = st.selectbox("סטטוס הטיפול", ["פתוח", "בטיפול", "טופל"], index=["פתוח", "בטיפול", "טופל"].index(st.session_state.demo_defects["lighting"]))
+    if st.button("עדכן סטטוס ליקוי", use_container_width=True):
+        st.session_state.demo_defects["lighting"] = status
+        st.success("סטטוס הליקוי עודכן בהדגמה בלבד.")
+    st.caption("אין דיווח למנהל ואין שמירה במסד נתונים.")
+
 else:
-    st.warning("רענון רכז ביטחון — פריט הדגמה בלבד, לא מועד חובה רשמי")
-    with st.expander("פרטי הרענון"):
-        st.write("סטטוס לדוגמה: ממתין לאישור אסמכתה")
-        st.caption("אין חיבור להנחיות משרד החינוך או לתיעוד אמיתי.")
-    st.info("הכשרת רכז טיולים — פריט הדגמה בלבד")
+    st.subheader("רענונים והכשרות — הדגמה")
+    st.caption("המועדים והחובות אינם מבוססים על חוזרי מנכ״ל. אין כאן אימות אסמכתאות אמיתי.")
+    for key, title in [("security", "רענון רכז ביטחון"), ("trips", "הכשרת רכז טיולים")]:
+        with st.expander(title + " — " + st.session_state.demo_training[key]):
+            st.write("סטטוס נוכחי: " + st.session_state.demo_training[key])
+            if st.session_state.demo_training[key] == "ממתין לביצוע":
+                if st.button("סמן שבוצע — ממתין לאימות", key="training_" + key, use_container_width=True):
+                    st.session_state.demo_training[key] = "ממתין לאימות אסמכתה"
+                    st.rerun()
+            else:
+                st.warning("נדרש אימות אסמכתה על ידי גורם מוסמך. אין אישור אוטומטי.")
 
 if st.session_state.demo_completed:
     with st.expander("משימות שסומנו כבוצעו בהדגמה"):
@@ -100,6 +120,8 @@ if st.session_state.demo_completed:
                 st.success(task["title"] + " — " + task["school"])
         if st.button("אפס נתוני הדגמה", use_container_width=True):
             st.session_state.demo_completed.clear()
+            st.session_state.demo_defects = {"lighting": "פתוח"}
+            st.session_state.demo_training = {"security": "ממתין לביצוע", "trips": "ממתין לביצוע"}
             st.rerun()
 
 st.divider()
