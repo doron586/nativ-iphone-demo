@@ -35,6 +35,16 @@ div[data-testid="stButton"] button {
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
+
+def normalize_security_standard(value):
+    """Convert an imported Excel cell into an approved display label."""
+    if value is None or not str(value).strip():
+        return "לא הוזן"
+    label = str(value).strip()
+    mapping = {"משטרתי": "משטרתי", "עירוני": "עירוני", "ללא": "ללא", "ללא תקן": "ללא"}
+    return mapping.get(label, "לא הוזן")
+
+
 if "demo_completed" not in st.session_state:
     st.session_state.demo_completed = set()
 if "demo_defects" not in st.session_state:
@@ -228,7 +238,7 @@ elif section == "תמונת מוסד":
     school_profiles = {
         "בית ספר הדגמה א׳": {"address": "רחוב הדגמה 1", "neighborhood": "שכונת הדגמה צפון", "principal": "מנהל/ת לדוגמה א׳", "coordinator": "רכז/ת ביטחון לדוגמה א׳", "phone": "לא הוזן", "security": "מאובטח", "standard": "משטרתי"},
         "בית ספר הדגמה ב׳": {"address": "רחוב הדגמה 2", "neighborhood": "שכונת הדגמה מזרח", "principal": "מנהל/ת לדוגמה ב׳", "coordinator": "רכז/ת ביטחון לדוגמה ב׳", "phone": "לא הוזן", "security": "לא מאובטח", "standard": "ללא"},
-        "גן הדגמה ג׳": {"address": "רחוב הדגמה 3", "neighborhood": "שכונת הדגמה דרום", "principal": "מנהל/ת לדוגמה ג׳", "coordinator": "לא הוזן", "phone": "לא הוזן", "security": "לא מאובטח", "standard": "ללא תקן"},
+        "גן הדגמה ג׳": {"address": "רחוב הדגמה 3", "neighborhood": "שכונת הדגמה דרום", "principal": "מנהל/ת לדוגמה ג׳", "coordinator": "לא הוזן", "phone": "לא הוזן", "security": "לא מאובטח", "standard": "עירוני"},
     }
     profile = school_profiles[selected]
     st.markdown("**פרטי מוסד**")
@@ -239,7 +249,8 @@ elif section == "תמונת מוסד":
     st.write("טלפון: " + profile["phone"])
     st.markdown("**מצב אבטחה — נתוני הדגמה בלבד**")
     st.write("מצב: " + profile["security"])
-    st.write("תקן: " + profile["standard"])
+    st.write("תקן: " + normalize_security_standard(profile["standard"]))
+    st.caption("בייבוא עתידי מאקסל: משטרתי / עירוני / ללא. ערך חסר או לא מזוהה יוצג כלא הוזן.")
     st.divider()
     matched = [t for t in tasks if t["school"] == selected]
     st.write("**משימות**")
