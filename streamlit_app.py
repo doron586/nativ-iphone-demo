@@ -54,7 +54,34 @@ st.warning("גרסת הדגמה בלבד — כל הנתונים פיקטיבי�
 st.caption("סימון משימות נשמר זמנית בדפדפן במהלך השימוש בלבד, ולא במאגר נתונים.")
 
 open_tasks = [t for t in tasks if t["id"] not in st.session_state.demo_completed]
-st.metric("משימות פתוחות לדוגמה", len(open_tasks))
+st.subheader("תמונת מצב יומית")
+urgent_open = [t for t in open_tasks if t["urgent"]]
+overdue_open = [t for t in open_tasks if t["due"] < today]
+due_today = [t for t in open_tasks if t["due"] == today]
+defects_open = int(st.session_state.demo_defects["lighting"] != "טופל")
+training_pending = sum(status == "ממתין לביצוע" for status in st.session_state.demo_training.values())
+training_unverified = sum(status == "ממתין לאימות אסמכתה" for status in st.session_state.demo_training.values())
+
+left, right = st.columns(2)
+with left:
+    st.metric("דחופות פתוחות", len(urgent_open))
+    st.metric("ליקויים פתוחים", defects_open)
+with right:
+    st.metric("משימות באיחור", len(overdue_open))
+    st.metric("רענונים לטיפול", training_pending + training_unverified)
+
+if urgent_open:
+    st.error(f"יש {len(urgent_open)} משימות דחופות פתוחות. יש לטפל בהן בהקדם.")
+if overdue_open:
+    st.warning(f"יש {len(overdue_open)} משימות באיחור שטרם בוצעו.")
+if defects_open:
+    st.warning("ליקוי תאורה פתוח או בטיפול — בית ספר הדגמה ב׳.")
+if training_unverified:
+    st.warning(f"{training_unverified} רענונים סומנו כבוצעו וממתינים לאימות אסמכתה.")
+if training_pending:
+    st.info(f"{training_pending} רענונים או הכשרות ממתינים לביצוע (נתוני הדגמה בלבד).")
+st.caption(f"להיום: {len(due_today)} משימות פתוחות | כל הנתונים פיקטיביים")
+
 
 def show_task(task):
     overdue = task["due"] < today
