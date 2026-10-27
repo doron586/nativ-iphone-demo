@@ -83,6 +83,31 @@ if training_pending:
 st.caption(f"להיום: {len(due_today)} משימות פתוחות | כל הנתונים פיקטיביים")
 
 
+def task_priority(task):
+    """Urgent first, then overdue, then today's tasks, then future tasks."""
+    if task["urgent"]:
+        return (0, task["due"], task["school"], task["id"])
+    if task["due"] < today:
+        return (1, task["due"], task["school"], task["id"])
+    if task["due"] == today:
+        return (2, task["due"], task["school"], task["id"])
+    return (3, task["due"], task["school"], task["id"])
+
+
+st.subheader("תוכנית העבודה להיום")
+today_queue = sorted(
+    (task for task in open_tasks if task["urgent"] or task["due"] <= today),
+    key=task_priority,
+)
+if today_queue:
+    for position, task in enumerate(today_queue, 1):
+        priority_label = "דחוף" if task["urgent"] else ("באיחור" if task["due"] < today else "להיום")
+        st.write(f'{position}. **{priority_label}** — {task["title"]} | {task["school"]}')
+else:
+    st.success("כל המשימות להיום הושלמו בהדגמה.")
+st.caption("הסדר מחושב לפי דחיפות ומועד. אין כאן חישוב מסלול או מרחקי נסיעה.")
+
+
 def show_task(task):
     overdue = task["due"] < today
     prefix = "דחוף" if task["urgent"] else ("באיחור" if overdue else "משימה")
@@ -106,7 +131,7 @@ if section == "לטיפול עכשיו":
     due_now = [t for t in open_tasks if t["urgent"] or t["due"] <= today]
     if not due_now:
         st.success("אין משימות פתוחות לטיפול מיידי בהדגמה.")
-    for task in due_now:
+    for task in sorted(due_now, key=task_priority):
         show_task(task)
     if st.session_state.demo_defects["lighting"] != "טופל":
         st.warning("ליקוי לדוגמה | תאורה — בית ספר הדגמה ב׳ | " + st.session_state.demo_defects["lighting"])
@@ -115,7 +140,7 @@ elif section == "משימות בהמשך":
     future = [t for t in open_tasks if not t["urgent"] and t["due"] > today]
     if not future:
         st.success("אין משימות עתידיות פתוחות בהדגמה.")
-    for task in future:
+    for task in sorted(future, key=task_priority):
         show_task(task)
 
 elif section == "ליקויים":
@@ -141,7 +166,7 @@ else:
                 st.warning("נדרש אימות אסמכתה על ידי גורם מוסמך. אין אישור אוטומטי.")
 
 if st.session_state.demo_completed:
-    with st.expander("משימות שסומנו כבוצעו בהדגמה"):
+    with st.expander("משימות שהושלמו בהדגמה"):
         for task in tasks:
             if task["id"] in st.session_state.demo_completed:
                 st.success(task["title"] + " — " + task["school"])
