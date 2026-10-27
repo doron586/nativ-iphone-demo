@@ -32,12 +32,14 @@ div[data-testid="stButton"] button {
 </style>
 """, unsafe_allow_html=True)
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 if "demo_completed" not in st.session_state:
     st.session_state.demo_completed = set()
 if "demo_defects" not in st.session_state:
     st.session_state.demo_defects = {"lighting": "פתוח"}
+if "demo_activities" not in st.session_state:
+    st.session_state.demo_activities = []
 if "demo_training" not in st.session_state:
     st.session_state.demo_training = {"security": "ממתין לביצוע", "trips": "ממתין לביצוע"}
 
@@ -135,7 +137,7 @@ def show_task(task):
             st.session_state.demo_completed.add(task["id"])
             st.rerun()
 
-section = st.radio("מעבר מהיר", ["לטיפול עכשיו", "משימות בהמשך", "ליקויים", "רענונים והכשרות"])
+section = st.radio("מעבר מהיר", ["לטיפול עכשיו", "משימות בהמשך", "ליקויים", "רענונים והכשרות", "יומן פעילות"])
 
 if section == "לטיפול עכשיו":
     due_now = [t for t in open_tasks if t["urgent"] or t["due"] <= today]
@@ -152,6 +154,38 @@ elif section == "משימות בהמשך":
         st.success("אין משימות עתידיות פתוחות בהדגמה.")
     for task in sorted(future, key=task_priority):
         show_task(task)
+
+elif section == "יומן פעילות":
+    st.subheader("יומן פעילות הקב״ט — הדגמה")
+    st.caption("רישום ידני של פעילויות פיקטיביות. השעה נקלטת בעת שמירת הדיווח לפי שעון שרת ההדגמה.")
+    with st.form("activity_form", clear_on_submit=True):
+        school = st.selectbox("מוסד חינוכי", ["בית ספר הדגמה א׳", "בית ספר הדגמה ב׳", "גן הדגמה ג׳"])
+        kind = st.selectbox("סוג פעילות", ["ביקור במוסד", "בדיקת אבטחה", "פגישה", "טיפול בליקוי", "פעילות אחרת"])
+        note = st.text_area("סיכום קצר", max_chars=400, placeholder="מה בוצע? (נתוני הדגמה בלבד)")
+        submitted = st.form_submit_button("שמור פעילות ביומן", use_container_width=True)
+    if submitted:
+        if not note.strip():
+            st.warning("יש לכתוב סיכום קצר לפני השמירה.")
+        else:
+            st.session_state.demo_activities.append({
+                "school": school, "kind": kind, "note": note.strip(),
+                "recorded_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
+            })
+            st.success("הפעילות נוספה ליומן ההדגמה.")
+    st.subheader("פעילויות שתועדו")
+    if not st.session_state.demo_activities:
+        st.info("עדיין לא תועדו פעילויות בסשן הנוכחי.")
+    for entry in reversed(st.session_state.demo_activities):
+        with st.expander(entry["recorded_at"] + " | " + entry["school"] + " | " + entry["kind"]):
+            st.write(entry["note"])
+    st.subheader("סיכום יום אוטומטי — הדגמה")
+    st.write(f'פעילויות שתועדו: {len(st.session_state.demo_activities)}')
+    st.write(f'משימות שסומנו כבוצעו: {len(st.session_state.demo_completed)} מתוך {len(tasks)}')
+    st.write(f'ליקויים פתוחים או בטיפול: {defects_open}')
+    if st.session_state.demo_activities:
+        for entry in st.session_state.demo_activities:
+            st.write(f'• {entry["school"]}: {entry["kind"]} — {entry["note"]}')
+    st.caption("הסיכום מבוסס על הפעילויות שנרשמו בסשן ועל מצב משימות ההדגמה, ואינו דוח רשמי.")
 
 elif section == "ליקויים":
     st.subheader("מעקב ליקויים — הדגמה")
@@ -182,6 +216,7 @@ if st.session_state.demo_completed:
                 st.success(task["title"] + " — " + task["school"])
         if st.button("אפס נתוני הדגמה", use_container_width=True):
             st.session_state.demo_completed.clear()
+            st.session_state.demo_activities = []
             st.session_state.demo_defects = {"lighting": "פתוח"}
             st.session_state.demo_training = {"security": "ממתין לביצוע", "trips": "ממתין לביצוע"}
             st.rerun()
