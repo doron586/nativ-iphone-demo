@@ -43,7 +43,7 @@ if "demo_training" not in st.session_state:
 
 today = date.today()
 tasks = [
-    {"id": "gate", "title": "בדיקת שער כניסה", "school": "בית ספר הדגמה א׳", "due": today, "urgent": True, "details": "בדיקת תקינות שער הכניסה והעברת דיווח דוגמה."},
+    {"id": "gate", "title": "בדיקת שער כניסה", "school": "בית ספר הדגמה א׳", "due": today - timedelta(days=1), "urgent": True, "details": "בדיקת תקינות שער הכניסה והעברת דיווח דוגמה."},
     {"id": "file", "title": "בדיקת תיק ביטחון", "school": "גן הדגמה ג׳", "due": today - timedelta(days=2), "urgent": False, "details": "בדיקת מסמכי תיק הביטחון לדוגמה."},
     {"id": "camera", "title": "בדיקת מצלמות", "school": "בית ספר הדגמה א׳", "due": today + timedelta(days=5), "urgent": False, "details": "בדיקת מצלמות ותיעוד ממצאים פיקטיביים."},
     {"id": "visit", "title": "תיאום ביקור", "school": "גן הדגמה ג׳", "due": today + timedelta(days=9), "urgent": False, "details": "תיאום ביקור עתידי לדוגמה."},
@@ -54,6 +54,12 @@ st.warning("גרסת הדגמה בלבד — כל הנתונים פיקטיבי�
 st.caption("סימון משימות נשמר זמנית בדפדפן במהלך השימוש בלבד, ולא במאגר נתונים.")
 
 open_tasks = [t for t in tasks if t["id"] not in st.session_state.demo_completed]
+st.subheader("התקדמות במהלך היום")
+completed_count = len(st.session_state.demo_completed)
+total_count = len(tasks)
+st.progress(completed_count / total_count, text=f"בוצעו {completed_count} מתוך {total_count} משימות הדגמה")
+st.caption(f"נותרו {total_count - completed_count} משימות פתוחות, כולל משימות עתידיות.")
+
 st.subheader("תמונת מצב יומית")
 urgent_open = [t for t in open_tasks if t["urgent"]]
 overdue_open = [t for t in open_tasks if t["due"] < today]
@@ -81,6 +87,10 @@ if training_unverified:
 if training_pending:
     st.info(f"{training_pending} רענונים או הכשרות ממתינים לביצוע (נתוני הדגמה בלבד).")
 st.caption(f"להיום: {len(due_today)} משימות פתוחות | כל הנתונים פיקטיביים")
+if not open_tasks and not defects_open and not (training_pending + training_unverified):
+    st.success("כל הפריטים בהדגמה טופלו.")
+else:
+    st.caption("פריטים שלא הושלמו נשארים פתוחים במהלך השימוש; אין שמירה בין הפעלות.")
 
 
 def task_priority(task):
