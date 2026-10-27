@@ -138,7 +138,7 @@ def show_task(task):
             st.session_state.demo_completed.add(task["id"])
             st.rerun()
 
-section = st.radio("מעבר מהיר", ["לטיפול עכשיו", "משימות בהמשך", "ליקויים", "רענונים והכשרות", "יומן פעילות", "סיכום למנהל"])
+section = st.radio("מעבר מהיר", ["לטיפול עכשיו", "משימות בהמשך", "ליקויים", "רענונים והכשרות", "יומן פעילות", "סיכום למנהל", "תמונת מוסד"])
 
 if section == "לטיפול עכשיו":
     due_now = [t for t in open_tasks if t["urgent"] or t["due"] <= today]
@@ -221,6 +221,29 @@ elif section == "סיכום למנהל":
     if training_pending + training_unverified:
         st.warning("קיימים רענונים או הכשרות הממתינים לביצוע או לאימות אסמכתה.")
     st.caption("אין כאן כפתור שליחה. הפקת דוח רשמי תחייב הרשאות, אימות ושמירה מאובטחת.")
+
+elif section == "תמונת מוסד":
+    st.subheader("תמונת מוסד — הדגמה")
+    selected = st.selectbox("בחר מוסד", ["בית ספר הדגמה א׳", "בית ספר הדגמה ב׳", "גן הדגמה ג׳"])
+    matched = [t for t in tasks if t["school"] == selected]
+    st.write("**משימות**")
+    for task in matched:
+        status = "בוצע" if task["id"] in st.session_state.demo_completed else "פתוח"
+        st.write(task["title"] + " — " + status)
+    if not matched:
+        st.info("אין משימות למוסד זה.")
+    st.write("**ליקויים**")
+    if selected == "בית ספר הדגמה ב׳":
+        st.write("תאורה בחצר — " + st.session_state.demo_defects["lighting"])
+    else:
+        st.write("אין ליקויים לדוגמה.")
+    st.write("**פעילויות שתועדו**")
+    activities = [a for a in st.session_state.demo_activities if a["school"] == selected]
+    for entry in reversed(activities):
+        st.write(entry["recorded_at"] + " | " + entry["kind"] + " — " + entry["note"])
+    if not activities:
+        st.info("טרם תועדו פעילויות למוסד.")
+    st.caption("נתוני הדגמה פיקטיביים בלבד.")
 
 elif section == "ליקויים":
     st.subheader("מעקב ליקויים — הדגמה")
