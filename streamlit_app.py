@@ -226,8 +226,8 @@ elif section == "תמונת מוסד":
     st.subheader("תמונת מוסד — הדגמה")
     selected = st.selectbox("בחר מוסד", ["בית ספר הדגמה א׳", "בית ספר הדגמה ב׳", "גן הדגמה ג׳"])
     school_profiles = {
-        "בית ספר הדגמה א׳": {"address": "רחוב הדגמה 1", "neighborhood": "שכונת הדגמה צפון", "principal": "מנהל/ת לדוגמה א׳", "coordinator": "רכז/ת ביטחון לדוגמה א׳", "phone": "לא הוזן", "security": "מאובטח", "standard": "מאבטח"},
-        "בית ספר הדגמה ב׳": {"address": "רחוב הדגמה 2", "neighborhood": "שכונת הדגמה מזרח", "principal": "מנהל/ת לדוגמה ב׳", "coordinator": "רכז/ת ביטחון לדוגמה ב׳", "phone": "לא הוזן", "security": "לא מאובטח", "standard": "ללא תקן"},
+        "בית ספר הדגמה א׳": {"address": "רחוב הדגמה 1", "neighborhood": "שכונת הדגמה צפון", "principal": "מנהל/ת לדוגמה א׳", "coordinator": "רכז/ת ביטחון לדוגמה א׳", "phone": "לא הוזן", "security": "מאובטח", "standard": "משטרתי"},
+        "בית ספר הדגמה ב׳": {"address": "רחוב הדגמה 2", "neighborhood": "שכונת הדגמה מזרח", "principal": "מנהל/ת לדוגמה ב׳", "coordinator": "רכז/ת ביטחון לדוגמה ב׳", "phone": "לא הוזן", "security": "לא מאובטח", "standard": "ללא"},
         "גן הדגמה ג׳": {"address": "רחוב הדגמה 3", "neighborhood": "שכונת הדגמה דרום", "principal": "מנהל/ת לדוגמה ג׳", "coordinator": "לא הוזן", "phone": "לא הוזן", "security": "לא מאובטח", "standard": "ללא תקן"},
     }
     profile = school_profiles[selected]
